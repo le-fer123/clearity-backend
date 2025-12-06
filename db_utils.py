@@ -127,6 +127,38 @@ async def init_database():
     await conn.close()
 
 
+async def migrate():
+    import re
+
+    folder = "db_migrations/"
+    files = os.listdir(folder)
+
+    max_file = max(
+        (f for f in files if re.match(r"\d+_", f)),
+        key=lambda f: int(re.match(r"(\d+)_", f).group(1))
+    )
+
+    print("Last migration-file:", max_file)
+    print("Apply migrations...")
+
+    conn = await asyncpg.connect(DATABASE_URL)
+
+    schema_path = f"{folder}{max_file}"
+
+    if not os.path.exists(schema_path):
+        print(f"✗ Schema file not found: {schema_path}")
+        return
+
+    with open(schema_path, "r", encoding="utf-8") as f:
+        schema = f.read()
+
+    await conn.execute(schema)
+
+    print("✓ Migrations finished")
+
+    await conn.close()
+
+
 async def main():
     if len(sys.argv) < 2:
         print("Database Utility")
@@ -135,6 +167,7 @@ async def main():
         print("  python db_utils.py stats       - Show database statistics")
         print("  python db_utils.py init        - Initialize database schema")
         print("  python db_utils.py reset       - Reset database (DELETE ALL DATA)")
+        print("  python db_utils.py migrate      - Apply migrations")
         return
 
     command = sys.argv[1]
@@ -153,6 +186,9 @@ async def main():
 
     elif command == "reset":
         await reset_database()
+
+    elif command == "migrate":
+        await migrate()
 
     else:
         print(f"Unknown command: {command}")

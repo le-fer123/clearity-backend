@@ -39,6 +39,60 @@ class SessionRepository:
             user_id, limit
         )
         return [dict(s) for s in sessions]
+    
+    async def create_anonymous_user(self) -> UUID:
+        """Create a new anonymous user"""
+        user_id = await db.fetchval(
+            "INSERT INTO users (is_anonymous) VALUES (TRUE) RETURNING id"
+        )
+        logger.info(f"Created anonymous user: {user_id}")
+        return user_id
+    
+    async def get_user_by_email(self, email: str) -> Optional[dict]:
+        """Get user by email address"""
+        user = await db.fetchrow(
+            """SELECT id, email, password_hash, is_anonymous, email_verified, 
+               created_at, last_login 
+               FROM users WHERE email = $1""",
+            email
+        )
+        return dict(user) if user else None
+    
+    async def get_user_by_id(self, user_id: UUID) -> Optional[dict]:
+        """Get user by ID"""
+        user = await db.fetchrow(
+            """SELECT id, email, is_anonymous, email_verified, created_at, last_login 
+               FROM users WHERE id = $1""",
+            user_id
+        )
+        return dict(user) if user else None
+    
+    async def create_user(self, email: str, password_hash: str) -> UUID:
+        """Create a new registered user"""
+        user_id = await db.fetchval(
+            """INSERT INTO users (email, password_hash, is_anonymous, email_verified)
+               VALUES ($1, $2, FALSE, FALSE) RETURNING id""",
+            email, password_hash
+        )
+        logger.info(f"Created registered user: {user_id} ({email})")
+        return user_id
+    
+    async def claim_anonymous_user(self, user_id: UUID, email: str, password_hash: str) -> None:
+        """Convert anonymous user to registered user"""
+        await db.execute(
+            """UPDATE users 
+               SET email = $1, password_hash = $2, is_anonymous = FALSE 
+               WHERE id = $3 AND is_anonymous = TRUE""",
+            email, password_hash, user_id
+        )
+        logger.info(f"Claimed anonymous user {user_id} with email {email}")
+    
+    async def update_last_login(self, user_id: UUID) -> None:
+        """Update user's last login timestamp"""
+        await db.execute(
+            "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1",
+            user_id
+        )
 
 
 session_repository = SessionRepository()

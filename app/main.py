@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import chat, session, mindmap
+from app.api.routes import chat, session, mindmap, auth
 from app.config import settings
 from app.database import db
 from app.logging_config import setup_logging
@@ -41,6 +41,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api", tags=["Authentication"])
 app.include_router(chat.router, prefix="/api", tags=["Chat"])
 app.include_router(session.router, prefix="/api", tags=["Sessions"])
 app.include_router(mindmap.router, prefix="/api", tags=["Mind Map"])

@@ -1,0 +1,3 @@
+@echo off
+echo Starting Clearity Backend (simple mode)...
+python -m uvicorn app.main:app --reload --port 55110

@@ -1,0 +1,3 @@
+@echo off
+echo Starting Clearity Backend...
+uvicorn app.main:app --reload --host 0.0.0.0 --port 55110

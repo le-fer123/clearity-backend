@@ -55,6 +55,7 @@ Rules:
 - Group similar projects when needed to stay under 5 visible projects
 - Set is_core_issue=true for nodes central to being stuck
 - IMPORTANT: Use field IDs EXACTLY as listed above (e.g., "startups" NOT "fld_startups")
+- Naming Rule: Use CONCRETE labels. Instead of "Promotion", use "Reddit Ads" or "Cold Email". Instead of "Health", use "Sleep 8h" or "Back Pain". Be specific.
 
 Output JSON schema:
 {

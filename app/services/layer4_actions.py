@@ -44,11 +44,13 @@ Common root causes:
 - external_pressure: responding to others' expectations
 
 Task design principles:
-- Start with action verb (Define, Write, List, Schedule, etc.)
-- KPI must be concrete and measurable ("You have written 5 bullet points")
-- Subtasks should be 3-7 small steps
-- Estimate realistic time (usually 15-45 min for most tasks)
-- Add context hints when helpful (quiet space, no phone, etc.)
+- **STRICT BAN ON PLANNING**: Do NOT generate tasks starting with "Define", "Plan", "Decide", "Think", "Review", "Strategy".
+- **ONLY REAL WORLD ACTIONS**: Tasks must interact with the world.
+  - ❌ BAD: "Define engagement strategy"
+  - ✅ GOOD: "Post intro on r/books", "Email 5 local librarians", "Setup Google Ads account"
+- **NAME NAMES**: You MUST include specific platform names, tools, or URLs allowed by your knowledge.
+  - If user describes a book startup, suggested tasks MUST mention "Goodreads", "LibraryThing", "TikTok BookTok".
+- KPI must be numeric and binary ("3 emails sent", not "strategy defined").
 
 Priority scoring (0.0-1.0):
 - High priority (0.8-1.0): Addresses high severity issue, high emotional relief, low barrier

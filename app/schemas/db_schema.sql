@@ -11,9 +11,13 @@ CREATE TABLE IF NOT EXISTS users (
     email_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP WITH TIME ZONE,
+    -- Allow three states:
+    -- 1) anonymous users (no email or password)
+    -- 2) registered users with password
+    -- 3) registered OAuth users with email but no password (password_hash NULL)
     CONSTRAINT check_user_auth_fields CHECK (
         (is_anonymous = TRUE AND email IS NULL AND password_hash IS NULL) OR
-        (is_anonymous = FALSE AND email IS NOT NULL AND password_hash IS NOT NULL)
+        (is_anonymous = FALSE AND email IS NOT NULL)
     )
 );
 
@@ -196,6 +200,17 @@ CREATE INDEX IF NOT EXISTS idx_tasks_mind_map_id ON tasks(mind_map_id);
 CREATE INDEX IF NOT EXISTS idx_snapshots_session_id ON snapshots(session_id);
 CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
+
+-- OAuth accounts (linking external provider identities to local users)
+CREATE TABLE IF NOT EXISTS oauth_accounts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    provider_user_id TEXT NOT NULL,
+    provider_data JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (provider, provider_user_id)
+);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

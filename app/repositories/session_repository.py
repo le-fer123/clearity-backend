@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Optional
 from uuid import UUID
@@ -76,6 +77,16 @@ class SessionRepository:
         )
         logger.info(f"Created registered user: {user_id} ({email})")
         return user_id
+
+    async def create_user_oauth(self, email: str, email_verified: bool = True) -> UUID:
+        """Create a new user registered via OAuth (no password)."""
+        user_id = await db.fetchval(
+            """INSERT INTO users (email, password_hash, is_anonymous, email_verified)
+               VALUES ($1, NULL, FALSE, $2) RETURNING id""",
+            email, email_verified
+        )
+        logger.info(f"Created OAuth user: {user_id} ({email})")
+        return user_id
     
     async def claim_anonymous_user(self, user_id: UUID, email: str, password_hash: str) -> None:
         """Convert anonymous user to registered user"""
@@ -93,6 +104,25 @@ class SessionRepository:
             "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1",
             user_id
         )
+
+    async def create_oauth_account(self, user_id: UUID, provider: str, provider_user_id: str, provider_data: dict | None = None) -> UUID:
+        """Link an OAuth provider account to a local user."""
+        provider_data = json.dumps(provider_data) if provider_data else None
+        logger.info(f"Linking OAuth account for user {user_id} provider={provider} provider_user_id={provider_user_id} provider_data={provider_data}")
+        account_id = await db.fetchval(
+            """INSERT INTO oauth_accounts (user_id, provider, provider_user_id, provider_data)
+               VALUES ($1, $2, $3, $4) RETURNING id""",
+            user_id, provider, provider_user_id, provider_data
+        )
+        logger.info(f"Created oauth account {account_id} for user {user_id} provider={provider}")
+        return account_id
+
+    async def get_oauth_account(self, provider: str, provider_user_id: str) -> Optional[dict]:
+        account = await db.fetchrow(
+            "SELECT id, user_id, provider, provider_user_id, provider_data FROM oauth_accounts WHERE provider = $1 AND provider_user_id = $2",
+            provider, provider_user_id
+        )
+        return dict(account) if account else None
 
 
 session_repository = SessionRepository()

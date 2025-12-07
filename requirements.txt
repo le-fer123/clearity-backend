@@ -10,3 +10,4 @@ python-jose[cryptography]
 passlib[bcrypt]
 pydantic[email]
 slowapi
+google-auth

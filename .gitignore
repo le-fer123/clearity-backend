@@ -58,3 +58,4 @@ htmlcov/
 .ipynb_checkpoints/
 
 .claude/
+.github/copilot-instructions.md

@@ -20,6 +20,15 @@ class NodeSchema(BaseModel):
     fields: List[str]
 
 
+class MessageResponse(BaseModel):
+    id: UUID
+    session_id: UUID
+    role: str
+    content: str
+    created_at: datetime
+    metadata: Optional[Dict[str, Any]] = None
+
+
 class ProjectSchema(BaseModel):
     id: UUID
     label: str

@@ -11,21 +11,20 @@ from app.repositories.session_repository import session_repository
 from app.repositories.task_repository import task_repository
 from app.services.ai_client import ai_client
 from app.services.layer2_mindmap import layer2_mindmap
-from app.services.layer3_reasoning import layer3_reasoning
-from app.services.layer4_actions import layer4_actions
+from app.services.layer4_actions import layer4_actions  # Merged Layer 3 + 4
 from app.services.layer5_memory import layer5_memory
 
 logger = logging.getLogger(__name__)
 
 
 def parse_json_field(value):
-    """Helper to parse JSON fields from database"""
     if value is None:
         return None
     if isinstance(value, str):
         try:
             return json.loads(value)
-        except:
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse JSON field: {e}. Value: {value[:100]}")
             return value
     return value
 
@@ -97,18 +96,22 @@ Use simple language, not therapy-speak or corporate buzzwords."""
             existing_mind_map_id=existing_snapshot["mind_map_id"] if existing_snapshot else None
         )
 
-        analysis = await layer3_reasoning.analyze(mind_map_data, context, message)
-        issue_id_map = await layer3_reasoning.persist_analysis(mind_map_id, analysis)
-
-        tasks_data = await layer4_actions.generate_tasks(analysis, mind_map_data, context)
-        await layer4_actions.persist_tasks(mind_map_id, tasks_data, issue_id_map)
+        # Layer 4 - Combined Reasoning & Tasks (merged Layer 3 + 4)
+        analysis_and_tasks = await layer4_actions.analyze_and_generate_tasks(
+            mind_map_data, context, message
+        )
+        
+        # Persist analysis and tasks
+        persist_result = await layer4_actions.persist_analysis_and_tasks(
+            mind_map_id, analysis_and_tasks
+        )
 
         response_message = await self._generate_response(
             message=message,
             context=context,
             mind_map=mind_map_data,
-            analysis=analysis,
-            tasks=tasks_data
+            analysis=analysis_and_tasks,
+            tasks={"tasks": analysis_and_tasks.get("tasks", [])}
         )
 
         await message_repository.create_message(session_id, "assistant", response_message)
@@ -117,11 +120,11 @@ Use simple language, not therapy-speak or corporate buzzwords."""
             "map_name": mind_map_data["map_name"],
             "central_theme": mind_map_data["central_theme"],
             "projects": mind_map_data.get("projects", []),
-            "issues": analysis.get("issues", []),
-            "root_causes": analysis.get("root_causes", [])
+            "issues": analysis_and_tasks.get("issues", []),
+            "root_causes": analysis_and_tasks.get("root_causes", [])
         }
 
-        unresolved_issues = [issue["id"] for issue in analysis.get("issues", [])]
+        unresolved_issues = [issue["id"] for issue in analysis_and_tasks.get("issues", [])]
 
         await layer5_memory.store_snapshot(
             session_id=session_id,
@@ -146,7 +149,7 @@ Use simple language, not therapy-speak or corporate buzzwords."""
             "metadata": {
                 "emotion": context.get("emotion"),
                 "emotion_intensity": context.get("emotion_intensity"),
-                "suggested_focus": analysis.get("suggested_issue_to_focus_now")
+                "suggested_focus": analysis_and_tasks.get("suggested_issue_to_focus_now")
             },
             "issues": analysis_response["issues"],
             "root_causes": analysis_response["root_causes"],
@@ -155,11 +158,11 @@ Use simple language, not therapy-speak or corporate buzzwords."""
         }
 
     async def _build_context(self, session_id: UUID, user_id: UUID, message: str) -> Dict[str, Any]:
-        recent_messages = await message_repository.get_recent_messages(session_id, limit=5)
+        recent_messages = await message_repository.get_recent_messages(session_id, limit=15)
 
         conversation_history = "\n".join([
             f"{msg['role']}: {msg['content']}"
-            for msg in recent_messages[-3:]
+            for msg in recent_messages
         ])
 
         analysis_prompt = f"""Analyze this user message and conversation context.

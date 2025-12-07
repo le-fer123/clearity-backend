@@ -2,8 +2,10 @@ import logging
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Depends
+from starlette.requests import Request
 
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
+from app.rate_limit import limiter
 from app.models.auth import RegisterRequest, LoginRequest, AuthResponse, UserInfoResponse
 from app.repositories.session_repository import session_repository
 
@@ -12,27 +14,28 @@ router = APIRouter()
 
 
 @router.post("/auth/register", response_model=AuthResponse, status_code=201)
-async def register(request: RegisterRequest):
+@limiter.limit("5/minute")
+async def register(request: Request, body: RegisterRequest):
     try:
-        existing_user = await session_repository.get_user_by_email(request.email)
+        existing_user = await session_repository.get_user_by_email(body.email)
         if existing_user:
             raise HTTPException(
                 status_code=400,
                 detail="Email already registered"
             )
-        password_hash = hash_password(request.password)
-        user_id = await session_repository.create_user(request.email, password_hash)
+        password_hash = hash_password(body.password)
+        user_id = await session_repository.create_user(body.email, password_hash)
 
         await session_repository.update_last_login(user_id)
 
         access_token = create_access_token(user_id)
         
-        logger.info(f"User registered successfully: {request.email}")
+        logger.info(f"User registered successfully: {body.email}")
         
         return AuthResponse(
             access_token=access_token,
             user_id=user_id,
-            email=request.email
+            email=body.email
         )
     
     except HTTPException:
@@ -43,9 +46,10 @@ async def register(request: RegisterRequest):
 
 
 @router.post("/auth/login", response_model=AuthResponse)
-async def login(request: LoginRequest):
+@limiter.limit("5/minute")
+async def login(request: Request, body: LoginRequest):
     try:
-        user = await session_repository.get_user_by_email(request.email)
+        user = await session_repository.get_user_by_email(body.email)
         
         if not user:
             raise HTTPException(
@@ -53,7 +57,7 @@ async def login(request: LoginRequest):
                 detail="Invalid email or password"
             )
         
-        if not verify_password(request.password, user["password_hash"]):
+        if not verify_password(body.password, user["password_hash"]):
             raise HTTPException(
                 status_code=401,
                 detail="Invalid email or password"
@@ -63,7 +67,7 @@ async def login(request: LoginRequest):
         
         access_token = create_access_token(user["id"])
         
-        logger.info(f"User logged in: {request.email}")
+        logger.info(f"User logged in: {body.email}")
         
         return AuthResponse(
             access_token=access_token,
@@ -79,7 +83,8 @@ async def login(request: LoginRequest):
 
 
 @router.get("/auth/me", response_model=UserInfoResponse)
-async def get_current_user_info(user_id: UUID = Depends(get_current_user)):
+@limiter.limit("5/minute")
+async def get_current_user_info(request: Request, user_id: UUID = Depends(get_current_user)):
     try:
         user = await session_repository.get_user_by_id(user_id)
         

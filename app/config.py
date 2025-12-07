@@ -14,11 +14,11 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
 
     LOG_LEVEL: str = "INFO"
-    
-    # JWT Authentication
-    JWT_SECRET: str = "ODtDDlUIikj9EiVhFIrPtxgDe1D9Lz5eFdFZ1dyzg0Y"
+
+    JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_DAYS: int = 30
+
 
     class Config:
         env_file = ".env"

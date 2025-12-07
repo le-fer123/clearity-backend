@@ -3,7 +3,9 @@ import logging
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
+from starlette.requests import Request
 
+from app.rate_limit import limiter
 from app.models.responses import MindMapResponse, TaskSchema
 from app.repositories.mindmap_repository import mindmap_repository
 from app.repositories.project_repository import project_repository
@@ -26,7 +28,8 @@ def parse_json_field(value):
 
 
 @router.get("/sessions/{session_id}/mindmap", response_model=MindMapResponse)
-async def get_session_mindmap(session_id: UUID):
+@limiter.limit("5/minute")
+async def get_session_mindmap(request: Request, session_id: UUID):
     """
     Get the current mind map for a session.
     """
@@ -101,7 +104,8 @@ async def get_session_mindmap(session_id: UUID):
 
 
 @router.get("/sessions/{session_id}/tasks", response_model=list[TaskSchema])
-async def get_session_tasks(session_id: UUID, limit: int = 5):
+@limiter.limit("5/minute")
+async def get_session_tasks(request: Request, session_id: UUID, limit: int = 5):
     """
     Get suggested tasks for a session.
     """

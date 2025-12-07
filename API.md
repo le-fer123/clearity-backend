@@ -125,6 +125,39 @@ Send a message and receive AI-powered clarity insights.
 
 ---
 
+### Get Session Messages
+
+#### `GET /api/sessions/{session_id}/messages`
+
+Get full conversation history for a session.
+
+**Query Parameters:**
+
+- `limit` (optional): Number of messages to return (default: 50)
+
+**Response:**
+
+```json
+[
+  {
+    "id": "uuid",
+    "session_id": "uuid",
+    "role": "user",
+    "content": "Hello",
+    "created_at": "2024-03-15T10:30:00Z"
+  },
+  {
+    "id": "uuid",
+    "session_id": "uuid",
+    "role": "assistant",
+    "content": "Hi there! How can I help?",
+    "created_at": "2024-03-15T10:30:05Z"
+  }
+]
+```
+
+---
+
 ## Session Endpoints
 
 ### Create Session

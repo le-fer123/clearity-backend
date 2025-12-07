@@ -5,7 +5,16 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Users
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    email TEXT UNIQUE,
+    password_hash TEXT,
+    is_anonymous BOOLEAN DEFAULT FALSE,
+    email_verified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT check_user_auth_fields CHECK (
+        (is_anonymous = TRUE AND email IS NULL AND password_hash IS NULL) OR
+        (is_anonymous = FALSE AND email IS NOT NULL AND password_hash IS NOT NULL)
+    )
 );
 
 -- Sessions
@@ -176,6 +185,7 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 
 -- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_mind_maps_session_id ON mind_maps(session_id);
 CREATE INDEX IF NOT EXISTS idx_projects_mind_map_id ON projects(mind_map_id);

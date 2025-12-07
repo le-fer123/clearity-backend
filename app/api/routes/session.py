@@ -2,7 +2,9 @@ import logging
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
+from starlette.requests import Request
 
+from app.rate_limit import limiter
 from app.models.requests import CreateSessionRequest
 from app.models.responses import SessionResponse, SnapshotCandidate
 from app.repositories.session_repository import session_repository
@@ -13,12 +15,13 @@ router = APIRouter()
 
 
 @router.post("/sessions", response_model=SessionResponse)
-async def create_session(request: CreateSessionRequest):
+@limiter.limit("5/minute")
+async def create_session(request: Request, body: CreateSessionRequest):
     """
     Create a new session for a user.
     """
     try:
-        session = await session_repository.create_session(request.user_id)
+        session = await session_repository.create_session(body.user_id)
         logger.info(f"Created session {session['id']}")
 
         return SessionResponse(
@@ -34,7 +37,8 @@ async def create_session(request: CreateSessionRequest):
 
 
 @router.get("/sessions/{session_id}", response_model=SessionResponse)
-async def get_session(session_id: UUID):
+@limiter.limit("5/minute")
+async def get_session(request: Request, session_id: UUID):
     """
     Get session information.
     """
@@ -59,7 +63,8 @@ async def get_session(session_id: UUID):
 
 
 @router.get("/users/{user_id}/snapshots", response_model=list[SnapshotCandidate])
-async def get_user_snapshots(user_id: UUID, limit: int = 3):
+@limiter.limit("5/minute")
+async def get_user_snapshots(request: Request, user_id: UUID, limit: int = 3):
     """
     Get recent snapshot candidates for a user (for continuing previous sessions).
     """

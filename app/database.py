@@ -35,6 +35,8 @@ class Database:
 
     @asynccontextmanager
     async def acquire(self):
+        if self.pool is None:
+            raise RuntimeError("Database pool not initialized. Call connect() first.")
         async with self.pool.acquire() as connection:
             yield connection
 

@@ -50,7 +50,7 @@ class AIClient:
         import time
         start_time = time.time()
 
-        async with httpx.AsyncClient(timeout=1200.0) as client:
+        async with httpx.AsyncClient(timeout=60.0) as client:
             try:
                 response = await client.post(
                     f"{self.base_url}/chat/completions",

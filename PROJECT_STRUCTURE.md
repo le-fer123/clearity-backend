@@ -20,13 +20,12 @@ ClearityBackend/
 │   │       ├── session.py               # Session management endpoints
 │   │       └── mindmap.py               # Mind map and tasks endpoints
 │   │
-│   ├── services/                        # Business logic (5 layers)
+│   ├── services/                        # Business logic (4 layers)
 │   │   ├── __init__.py
 │   │   ├── ai_client.py                 # OpenRouter API client
 │   │   ├── layer1_orchestrator.py       # Layer 1: User-facing orchestrator
 │   │   ├── layer2_mindmap.py            # Layer 2: Mind map builder
-│   │   ├── layer3_reasoning.py          # Layer 3: Issue analysis engine
-│   │   ├── layer4_actions.py            # Layer 4: Task generator
+│   │   ├── layer4_actions.py            # Layer 4: Reasoning & Actions (merged Layer 3 + 4)
 │   │   └── layer5_memory.py             # Layer 5: Long-term memory
 │   │
 │   ├── repositories/                    # Database access layer
@@ -87,13 +86,12 @@ ClearityBackend/
 - **app/api/routes/session.py**: Session creation and management
 - **app/api/routes/mindmap.py**: Mind map and task retrieval endpoints
 
-### Services (5-Layer Architecture)
+### Services (4-Layer Architecture)
 
 - **app/services/ai_client.py**: Wrapper for OpenRouter API calls
 - **app/services/layer1_orchestrator.py**: Orchestrates all layers, talks to user
 - **app/services/layer2_mindmap.py**: Builds and updates mind maps
-- **app/services/layer3_reasoning.py**: Analyzes issues and root causes
-- **app/services/layer4_actions.py**: Generates ADHD-friendly tasks
+- **app/services/layer4_actions.py**: Combined reasoning & actions - analyzes issues, root causes, and generates ADHD-friendly tasks (merged Layer 3 + 4)
 - **app/services/layer5_memory.py**: Manages snapshots and long-term memory
 
 ### Repositories (Data Access)
@@ -193,11 +191,12 @@ from app.services.layer1_orchestrator import layer1_orchestrator
 - Easy to mock for testing
 - Clear separation from business logic
 
-### 5-Layer Architecture
+### 4-Layer Architecture
 
 - Each layer has single responsibility
 - Only Layer 1 talks to users
-- Layers 2-5 output structured data only
+- Layer 4 combines reasoning and action generation for efficiency
+- Layers 2, 4, 5 output structured data only
 - Clear orchestration flow
 
 ### Async Throughout

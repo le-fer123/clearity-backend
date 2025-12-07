@@ -27,6 +27,71 @@ Check API and database health.
 
 ---
 
+## Authentication
+
+Clearity supports **3 authentication modes**:
+
+### 1. Anonymous Mode (No Auth)
+
+No JWT token needed. Just send messages and save `session_id`.
+
+```bash
+curl -X POST http://localhost:55110/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello"}'
+```
+
+### 2. JWT Authentication (Email + Password)
+
+**Step 1: Register or Login**
+
+```bash
+# Register
+curl -X POST http://localhost:55110/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "secure123"}'
+
+# Or Login
+curl -X POST http://localhost:55110/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "secure123"}'
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJI...",
+  "user_id": "uuid",
+  "email": "user@example.com"
+}
+```
+
+**Step 2: Use JWT in requests**
+
+```bash
+curl -X POST http://localhost:55110/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJI..." \
+  -d '{"message": "Hello"}'
+```
+
+### 3. Google OAuth
+
+**Step 1: Get auth URL**
+
+```bash
+curl http://localhost:55110/api/auth/google/login
+# Returns: {"auth_url": "https://accounts.google.com/o/oauth2/v2/auth?..."}
+```
+
+**Step 2: Redirect user to auth_url**
+
+**Step 3: Google redirects to callback** → returns JWT
+
+See full documentation in `AUTH.md`
+
+
+
 ## Chat Endpoints
 
 ### Send Message
@@ -127,9 +192,14 @@ Send a message and receive AI-powered clarity insights.
 
 ### Get Session Messages
 
-#### `GET /api/sessions/{session_id}/messages`
+#### `GET /api/sessions/{session_id}/messages?limit=50`
 
 Get full conversation history for a session.
+
+**Headers (optional):**
+```
+Authorization: Bearer {jwt}  # For authenticated users
+```
 
 **Query Parameters:**
 
@@ -381,13 +451,27 @@ Currently no rate limiting is implemented. This will be added in production.
 
 ## Authentication
 
-Currently no authentication is required. User IDs are generated automatically.
+Clearity supports both anonymous and authenticated modes.
 
-In production, you should implement proper authentication:
+### Anonymous Access
 
-- JWT tokens
-- API keys
-- OAuth 2.0
+All endpoints (except `/api/auth/*`) work without authentication.
+Simply omit the `Authorization` header.
+
+### Authenticated Access
+
+For registered users, include JWT token:
+
+```http
+Authorization: Bearer {access_token}
+```
+
+**How to get JWT:**
+1. Register: `POST /api/auth/register`
+2. Login: `POST /api/auth/login`
+3. Google OAuth: `GET /api/auth/google/login`
+
+**Full authentication guide:** See `AUTH.md`
 
 ---
 

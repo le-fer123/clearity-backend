@@ -213,8 +213,9 @@ python test_api.py
 - **START_HERE.md** ← вы здесь
 - **QUICKSTART.md** - подробный quick start
 - **SETUP_EXTERNAL_DB.md** - настройка внешней БД
-- **README.md** - архитектура и дизайн
+- **README.md** - архитектура и дизайн (4-layer architecture)
 - **API.md** - полная документация API
+- **AUTH.md** - JWT authentication + Google OAuth
 - **PROJECT_STRUCTURE.md** - структура проекта
 
 ---

@@ -4,13 +4,12 @@ AI clarity engine for people who feel mentally overloaded, scattered, or stuck.
 
 ## Architecture
 
-Clearity implements a **5-layer architecture**:
+Clearity implements a **4-layer architecture**:
 
 1. **Layer 1 - Support & Orchestrator**: User-facing layer, coordinates all others
 2. **Layer 2 - Visualization / Mind Map Builder**: Builds living mind maps
-3. **Layer 3 - Reasoning Engine**: Analyzes why users are stuck
-4. **Layer 4 - Action Engine**: Generates concrete, ADHD-friendly tasks
-5. **Layer 5 - Memory & Retrieval**: Long-term session memory
+3. **Layer 4 - Reasoning & Actions**: Analyzes issues, identifies root causes, and generates concrete ADHD-friendly tasks (merged Layer 3 + 4)
+4. **Layer 5 - Memory & Retrieval**: Long-term session memory
 
 ## Tech Stack
 
@@ -36,8 +35,7 @@ ClearityBackend/
 │   ├── services/              # Business logic layers
 │   │   ├── layer1_orchestrator.py
 │   │   ├── layer2_mindmap.py
-│   │   ├── layer3_reasoning.py
-│   │   ├── layer4_actions.py
+│   │   ├── layer4_actions.py     # Merged Layer 3 + 4: Reasoning & Actions
 │   │   ├── layer5_memory.py
 │   │   └── ai_client.py
 │   ├── repositories/          # Database access layer
@@ -148,10 +146,9 @@ API documentation: `http://localhost:55110/docs`
 2. **Layer 1 analyzes context** → emotion, intent, session stage
 3. **Layer 5 loads memory** → retrieves previous snapshots if available
 4. **Layer 2 builds/updates mind map** → projects, nodes, emotions, connections
-5. **Layer 3 analyzes issues** → identifies root causes, builds plans
-6. **Layer 4 generates tasks** → concrete, ADHD-friendly action steps
-7. **Layer 1 responds** → warm, human message with insights and suggestions
-8. **Layer 5 stores snapshot** → for future sessions
+5. **Layer 4 analyzes and acts** → identifies issues, root causes, plans, and generates concrete ADHD-friendly tasks
+6. **Layer 1 responds** → warm, human message with insights and suggestions
+7. **Layer 5 stores snapshot** → for future sessions
 
 ## Database Schema
 
